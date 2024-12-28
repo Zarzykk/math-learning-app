@@ -1,6 +1,7 @@
 // Composables
 import {createRouter, createWebHistory} from 'vue-router';
 import {jwtDecode} from "jwt-decode";
+import { setAccessDenied, setAccessMessage } from '@/store';
 
 const routes = [
   {

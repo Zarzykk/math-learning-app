@@ -12,6 +12,7 @@
     "axios": "^1.6.7",
     "core-js": "^3.34.0",
     "jwt-decode": "^4.0.0",
+    "mathjax": "^3.2.2",
     "mathlive": "^0.98.6",
     "roboto-fontface": "*",
     "vue": "^3.3.0",

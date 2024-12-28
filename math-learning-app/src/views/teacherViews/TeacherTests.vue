@@ -3,19 +3,25 @@
     <v-col>
       <v-row>
         <v-col>
-          <v-btn @click="createNewTest('ADD', null)">Utwórz Nowy Test</v-btn>
+          <v-btn @click="openModal('ADD')">Utwórz Nowy Test</v-btn>
+          <TestManagementModal
+            :visible="showModal"
+            :itemid="itemId"
+            :mode="mode"
+            :classes-list="allClasses"
+            @close="showModal = false"/>
         </v-col>
         <v-col>
           <v-autocomplete
             v-model="selectedClass"
-            label="Wybierz klase"
             :items="allClasses"
-            item-title="classYearAndIndex"
+            class="autocomplete-item"
+            label="Wybierz klasę"
+            item-title="className"
             item-value="id"
-            solo
-          >
+            return-object>
             <template v-slot:append>
-              <v-btn @click="fetchTests">
+              <v-btn @click="fetchAssignments">
                 <v-icon>mdi-magnify</v-icon>
               </v-btn>
             </template>
@@ -28,8 +34,9 @@
             <v-expansion-panel v-for="test in tests" :key="test.id" @click="loadPanelContent(test.id)">
               <v-expansion-panel-title>
                 <WorkHeader
-                  :class-name="test.className"
-                  :start-date="test.startDate"/>
+                  :class-name="test.classIndex"
+                  :materialName="test.materialSection"
+                  :start-date="test.activationTime"/>
               </v-expansion-panel-title>
               <v-expansion-panel-text>
                 <div v-if="test.content">
@@ -64,15 +71,17 @@
 </template>
 
 <script>
-import BaseDashboard from "@/components/BaseDashboard.vue";
+import BaseDashboard from "@/components/shared/BaseDashboard.vue";
 import TaskEditor from "@/components/TaskEditor.vue";
 import TaskManager from "@/components/TaskManager.vue";
 import axios from "axios";
 import WorkHeader from "@/components/work/WorkHeader.vue";
 import WorkBody from "@/components/work/WorkBody.vue";
+import TestManagementModal from "@/components/TestManagementModal.vue";
+import apiService from "@/services/apiService";
 
 export default {
-  components: {WorkBody, WorkHeader, TaskManager, TaskEditor, BaseDashboard},
+  components: {TestManagementModal, WorkBody, WorkHeader, TaskManager, TaskEditor, BaseDashboard},
   data() {
     return {
       tests: [],
@@ -80,53 +89,40 @@ export default {
       selectedClass: null,
       expandedPanel: null,
       dialog: false,
+      showModal: false,
       mode: null,
-      testId: null,
+      itemId: null,
     };
   },
   mounted() {
-    this.fetchTests();
+    this.fetchAssignments();
     this.fetchClasses()
   },
   methods: {
-    showCreateTestDialog(mode, testId) {
-      this.dialog = true;
+    openModal(mode, itemId = null) {
       this.mode = mode;
-      this.testId = testId;
+      this.itemId = itemId;
+      this.showModal = true;
     },
-    async fetchTests() {
+    async fetchAssignments() {
       const userInfoString = localStorage.getItem('userInfo');
-      if (userInfoString) {
-        const userInfo = JSON.parse(userInfoString);
-        try {
-          let params = userInfo.id;
-          if (this.selectedClass !== null) {
-            params = params + "?classId=" + this.selectedClass;
-          }
-          axios.get(`/api/tests/get/teacher/${params}`).then(response => {
-              this.tests = response.data.map(item => ({
-                id: item.id,
-                className: item.className,
-                materialName: item.materialName,
-                startDate: item.activationTime,
-                content: null,
-              }));
-            }
-          )
-        } catch (error) {
-          console.log(error);
-        }
+      const userInfo = JSON.parse(userInfoString);
+      try {
+        const assignmentsResponse = await apiService.fetchAssignments(userInfo.id, 'EXAM');
+        this.tests = assignmentsResponse;
+        console.log(this.tests)
+      } catch (error) {
+        console.log(error);
       }
     },
     async fetchClasses() {
       try {
-        const obj = JSON.parse(localStorage.getItem('userInfo'));
-        if (obj && obj.id) {
-          const response = await axios.get('/api/class/get/' + obj.id);
-          this.allClasses = response.data;
-        } else {
-          console.error('Brak danych użytkownika w localStorage');
-        }
+        const classesResponse = await apiService.fetchClasses(JSON.parse(localStorage.getItem('userInfo')).id);
+        this.allClasses = classesResponse.map((item) => ({
+          id: item.id,
+          classYear: item.classYear,
+          className: `${item.classYear}${item.classIndex}`
+        }));
       } catch (error) {
         console.error('Error fetching classes:', error);
       }
@@ -151,15 +147,6 @@ export default {
         this.$router.push({path: '/test-management', query: {mode: mode}})
       }
     },
-    saveTest() {
-      // Logika do zapisywania testu
-    },
-    editTest(test) {
-      // Logika edycji testu
-    },
-    deleteTest(test) {
-      // Logika usuwania testu
-    }
   },
 };
 </script>

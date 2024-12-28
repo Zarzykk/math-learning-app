@@ -26,7 +26,7 @@
 </template>
 
 <script>
-import BaseDashboard from "@/components/BaseDashboard.vue";
+import BaseDashboard from "@/components/shared/BaseDashboard.vue";
 import TaskEditor from "@/components/TaskEditor.vue";
 import axios from "axios";
 

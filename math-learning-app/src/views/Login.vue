@@ -5,7 +5,7 @@
         <v-card class="elevation-12">
           <v-card-title class="text-h5">Logowanie</v-card-title>
           <v-card-text>
-            <v-form ref="form" @submit.prevent="login">
+            <v-form ref="form" @submit.prevent="handleLogin">
               <v-text-field
                 label="Email"
                 v-model="loginForm.email"
@@ -21,7 +21,6 @@
               ></v-text-field>
               <v-btn type="submit" color="primary" block>Zaloguj</v-btn>
             </v-form>
-            <v-btn @click="loginWithTeams" color="secondary" block>Zaloguj przez Microsoft Teams</v-btn>
           </v-card-text>
         </v-card>
       </v-col>
@@ -31,7 +30,8 @@
 
 <script>
 import {jwtDecode} from 'jwt-decode';
-import {setToken, setUserInfo} from "@/store";
+import { setToken, setUserInfo, setAccessDenied } from "@/store"; // Importujemy setAccessDenied
+import apiService from "@/services/apiService";
 
 export default {
   data() {
@@ -51,36 +51,31 @@ export default {
     };
   },
   methods: {
-    async login() {
+    async handleLogin() {
       if (await this.$refs.form.validate()) {
         try {
-          const response = await this.$axios.post('http://localhost:8080/authenticate', this.loginForm);
-          this.handleLoginSuccess(response.data);
-          // console.log('Login successful:', response);
-          // console.log(jwtDecode(localStorage.getItem('userToken')))
+          const result = await apiService.login(this.loginForm);
+          console.log('Logged in:', result);
+          this.handleLoginSuccess(result);
         } catch (error) {
-          // console.log('Login error:', error);
-          // Tutaj możesz obsłużyć błędy logowania, np. pokazać komunikat użytkownikowi
+          console.error('Login failed', error);
         }
       }
     },
-    loginWithTeams() {
-      // Logika logowania przez Microsoft Teams
-    },
     handleLoginSuccess(data) {
-      setToken(data.token)
+      setToken(data.token);
       setUserInfo(data.userInfo);
+      setAccessDenied(false); // Czyszczenie flagi braku dostępu po udanym logowaniu
       this.redirectUserBasedOnRole(data.token);
     },
     redirectUserBasedOnRole(token) {
       try {
         const decodedToken = jwtDecode(token);
-        // console.log(decodedToken)
-        const userRole = decodedToken.role; // Zakładając, że role są przechowywane w tokenie
-        console.log('User role:' +userRole)
-        if (userRole === ('ROLE_TEACHER')) {
+        const userRole = decodedToken.role; // Zakładamy, że role są przechowywane w tokenie
+        console.log('User role:' + userRole);
+        if (userRole === 'ROLE_TEACHER') {
           this.$router.push('/teacher-dashboard');
-        } else if (userRole === ('ROLE_STUDENT')) {
+        } else if (userRole === 'ROLE_STUDENT') {
           this.$router.push('/student-dashboard');
         } else {
           // Opcjonalnie: przekieruj na stronę błędu lub domyślną
@@ -90,7 +85,7 @@ export default {
         console.error('Błąd dekodowania tokena:', error);
         // Opcjonalnie: obsługa błędów dekodowania tokena
       }
-    }
+    },
   },
 };
 </script>

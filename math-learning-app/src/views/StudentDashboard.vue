@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import BaseDashboard from '@/components/BaseDashboard.vue';
+import BaseDashboard from '@/components/shared/BaseDashboard.vue';
 
 export default {
   components: {
@@ -53,7 +53,11 @@ export default {
           description: 'Przeglądaj materiały dydaktyczne.',
           route: '/educational-materials'
         },
-        // Możesz dodać więcej kafelków zgodnie z potrzebami
+        {
+          title: 'Chat gpt',
+          description: 'Test',
+          route: '/chatgpt-test'
+        }
       ]
     };
   },

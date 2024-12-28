@@ -4,11 +4,12 @@
       <v-col>
         <v-autocomplete
           v-model="selectedClass"
-          label="Wybierz klase"
           :items="classes"
-          item-title="classYearAndIndex"
+          class="autocomplete-item"
+          label="Wybierz klasę"
+          item-title="className"
           item-value="id"
-          solo>
+          return-object>
           <template v-slot:append>
             <v-btn
             @click="fetchStudents(this.selectedClass)">
@@ -23,7 +24,7 @@
         <v-expansion-panel v-for="student in students" :key="student.id">
           <div v-if="student.id">
             <v-expansion-panel-title>
-              {{ student.firstName }} {{ student.lastName }}
+              {{ student.firstName }} {{ student.lastName }} {{student.classIndex}}
             </v-expansion-panel-title>
             <v-expansion-panel-text>
               {{ student.id }}
@@ -37,11 +38,11 @@
 </template>
 
 <script>
-import BaseDashboard from '@/components/BaseDashboard.vue';
+import BaseDashboard from '@/components/shared/BaseDashboard.vue';
 import axios from 'axios';
+import apiService from "@/services/apiService";
 
 export default {
-  name: 'ClassSelector',
   components: {
     BaseDashboard
   },
@@ -51,10 +52,11 @@ export default {
       classes: [],
       selectedClass: null,
       visibleStudentId: null,
-    }
+    };
   },
   mounted() {
     this.fetchClasses();
+    this.fetchStudents();
   },
   methods: {
     async handleChange() {
@@ -68,33 +70,33 @@ export default {
       //   console.error('Error fetching students:', error);
       // }
     },
-    fetchStudents(classId) {
-      if (classId === null) {
-        console.log("puiste?!?!")
-        return;
-      }
+    async fetchStudents() {
       try {
-        axios.get(`/api/students/get/${classId}`).then(response => {
-          this.students = response.data;
-        })
+        const studentsResponse = await apiService.fetchStudents(JSON.parse(localStorage.getItem('userInfo')).id);
+        this.students = studentsResponse.map((item) => ({
+          id: item.id,
+          firstName: item.firstName,
+          lastName: item.lastName,
+          classIndex: item.classIndex
+        }));
       } catch (error) {
         console.error('Error fetching students:', error);
       }
     },
     async fetchClasses() {
       try {
-        const obj = JSON.parse(localStorage.getItem('userInfo'));
-        if (obj && obj.id) {
-          const response = await axios.get('/api/class/get/' + obj.id);
-          this.classes = response.data;
-        } else {
-          console.error('Brak danych użytkownika w localStorage');
-        }
+        const classesResponse = await apiService.fetchClasses(JSON.parse(localStorage.getItem('userInfo')).id);
+        this.classes = classesResponse.map((item) => ({
+          id: item.id,
+          classYear: item.classYear,
+          className: `${item.classYear}${item.classIndex}`
+        }));
+        console.log(this.classes)
       } catch (error) {
         console.error('Error fetching classes:', error);
       }
     }
-  },
+  }
   // setup() {
   //   const classes = ref([]);
   //   const selectedClass = ref('');

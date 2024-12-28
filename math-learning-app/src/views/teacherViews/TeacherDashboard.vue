@@ -25,11 +25,19 @@
         </v-card>
       </v-col>
     </v-row>
+    <v-row>
+      <v-col cols="12" sm="6" md="4">
+        <v-card class="ma-3" raised @click="goTo('/create-test')">
+          <v-card-title>Tworzenie testów</v-card-title>
+<!--          <v-card-text>Twórz i oceniaj testy online.</v-card-text>-->
+        </v-card>
+      </v-col>
+    </v-row>
   </BaseDashboard>
 </template>
 
 <script>
-import BaseDashboard from '@/components/BaseDashboard.vue';
+import BaseDashboard from '@/components/shared/BaseDashboard.vue';
 
 export default {
   components: {

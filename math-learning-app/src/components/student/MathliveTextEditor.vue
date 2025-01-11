@@ -1,12 +1,26 @@
 <template>
-  <div
-    class="mathlive-text-editor"
-    :style="{ width: width, height: height, overflow: 'auto' }"
-  >
+  <div class="mathlive-text-editor" :style="{ width: width, height: height }">
+    <div class="button-container">
+      <v-btn icon @click="toggleEditMode"
+             :title="isEditable ? 'Wyłącz edycje' : 'Włącz edycje'"
+             class="custom-button">
+        <v-icon class="custom-icon">{{ isEditable ? 'mdi-pencil-off' : 'mdi-pencil' }}</v-icon>
+      </v-btn>
+      <v-btn icon
+             class="custom-button"
+             :title="'Inny przycisk (akcja do dodania)'">
+        <v-icon class="custom-icon">mdi-information</v-icon>
+      </v-btn>
+      <v-btn icon @click="addMathField"
+             :tile="'Dodaj pole matematyczne'"
+             class="custom-button">
+        <v-icon>mdi-plus</v-icon>
+      </v-btn>
+    </div>
     <div
       ref="editableDiv"
       class="editable-div"
-      contenteditable="isEditable"
+      :contenteditable="isEditable"
     ></div>
   </div>
 </template>
@@ -102,6 +116,57 @@ export default {
 
       mathfield.focus();
     },
+    toggleEditMode() {
+      this.isEditable = !this.isEditable;
+    },
+    addMathField() {
+      const mathfield = new MathfieldElement();
+      mathfield.classList.add("inline-mathlive");
+      mathfield.setValue(""); // Możesz ustawić tutaj domyślną wartość
+
+      // Dodajemy Mathfield do kursora lub na końcu
+      const div = this.$refs.editableDiv;
+      const selection = window.getSelection();
+
+      if (
+        selection &&
+        selection.rangeCount > 0 &&
+        div.contains(selection.anchorNode)
+      ) {
+        // Wstaw w miejscu kursora
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(mathfield);
+
+        // Ustaw kursor za nowo dodanym Mathfield
+        const textNode = document.createTextNode("\u00A0"); // Dodajemy pusty znak (spację)
+        range.insertNode(textNode); // Wstawiamy znak po Mathfield
+        range.setStartAfter(textNode); // Ustawiamy kursor za spacją
+        range.setEndAfter(textNode);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      } else {
+        // Jeśli nie ma kursora, dodaj na końcu
+        div.appendChild(mathfield);
+        const textNode = document.createTextNode("\u00A0"); // Dodajemy pusty znak (spację)
+        div.appendChild(textNode);
+
+        // Ustawiamy kursor za spacją
+        const range = document.createRange();
+        range.setStartAfter(textNode);
+        range.setEndAfter(textNode);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+
+      // Dodajemy obsługę po opuszczeniu (blur)
+      mathfield.addEventListener("blur", () => {
+        this.convertMathfieldToDisplay(mathfield, mathfield.getValue());
+      });
+
+      // Ustawiamy fokus na nowo dodanym Mathfield
+      mathfield.focus();
+    }
   },
   watch: {
     apiContent: {
@@ -119,19 +184,41 @@ export default {
 
 <style>
 .mathlive-text-editor {
+  display: flex;
+  flex-direction: column;
   border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 8px;
-  box-sizing: border-box;
+  border-radius: 5px;
+  position: relative;
+}
+
+.button-container {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 4px 8px; /* Mniejsze marginesy */
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #ccc;
+}
+
+.custom-button {
+  width: 60px !important; /* Szerokość przycisków */
+  height: 25px !important; /* Wysokość przycisków */
+  border-radius: 4px !important; /* Prostokątny kształt */
+  padding: 0 !important; /* Usuń marginesy wewnętrzne */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: unset !important; /* Usuń minimalną szerokość domyślną Vuetify */
+}
+
+.custom-icon {
+  font-size: 18px !important; /* Zmniejsz rozmiar ikon */
 }
 
 .editable-div {
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  flex-grow: 1;
   padding: 8px;
-  min-height: 100%;
-  outline: none;
-  white-space: pre-wrap;
+  overflow: auto;
 }
 
 .katex-display {

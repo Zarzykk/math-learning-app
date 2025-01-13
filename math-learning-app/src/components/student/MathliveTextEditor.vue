@@ -1,27 +1,51 @@
 <template>
-  <div class="mathlive-text-editor" :style="{ width: width, height: height }">
-    <div class="button-container">
-      <v-btn icon @click="toggleEditMode"
-             :title="isEditable ? 'Wyłącz edycje' : 'Włącz edycje'"
-             class="custom-button">
-        <v-icon class="custom-icon">{{ isEditable ? 'mdi-pencil-off' : 'mdi-pencil' }}</v-icon>
-      </v-btn>
-      <v-btn icon
-             class="custom-button"
-             :title="'Inny przycisk (akcja do dodania)'">
-        <v-icon class="custom-icon">mdi-information</v-icon>
-      </v-btn>
-      <v-btn icon @click="addMathField"
-             :tile="'Dodaj pole matematyczne'"
-             class="custom-button">
-        <v-icon>mdi-plus</v-icon>
-      </v-btn>
+  <div :class="['mathlive-text-editor', { 'editable-active': isEditable }]"
+       :style="{ width: width, height: height }">
+    <div class="header-container">
+      <div class="task-number" v-if="taskNumber">Zadanie {{ taskNumber + 1 }}</div>
+      <div v-else class="task-placeholder"></div>
+      <div class="button-container">
+        <v-btn
+          icon
+          @click="toggleEditMode"
+          :title="isEditable ? 'Wyłącz edycje' : 'Włącz edycje'"
+          class="custom-button"
+        >
+          <v-icon>{{ isEditable ? 'mdi-pencil-off' : 'mdi-pencil' }}</v-icon>
+        </v-btn>
+        <v-btn
+          icon
+          :title="'Inny przycisk (akcja do dodania)'"
+          class="custom-button"
+          :disabled="!isEditable"
+        >
+          <v-icon>mdi-information</v-icon>
+        </v-btn>
+        <v-btn
+          icon
+          @click="addMathField"
+          :title="'Dodaj MathField'"
+          class="custom-button"
+          :disabled="!isEditable"
+        >
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
+      </div>
     </div>
     <div
       ref="editableDiv"
       class="editable-div"
       :contenteditable="isEditable"
+      @focus="setActiveSection('content')"
     ></div>
+    <div
+      ref="answerDiv"
+      class="answer-div"
+      :contenteditable="isEditable"
+      @focus="setActiveSection('answer')"
+    >
+      <span class="answer-label" contenteditable="false">Odpowiedź: </span>
+    </div>
   </div>
 </template>
 
@@ -33,7 +57,7 @@ import 'katex/dist/katex.min.css';
 export default {
   name: 'MathliveTextEditor',
   props: {
-    apiContent: {
+    taskContent: {
       type: String,
       default: '',
     },
@@ -49,30 +73,50 @@ export default {
       type: Boolean,
       default: true, // Określa, czy komponent jest edytowalny
     },
+    taskNumber: {
+      type: Number,
+      default: null, // Numer zadania jest opcjonalny
+    }
   },
   data() {
     return {
-      isEditable: this.editable, // Zmienna wewnętrzna do przełączania edycji
+      isEditable: this.editable,
+      activeSection: null,
     };
   },
   methods: {
-    loadContentFromAPI(content) {
-      const div = this.$refs.editableDiv;
+    loadContentFromAPI(data) {
+      const contentDiv = this.$refs.editableDiv;
+      const answerDiv = this.$refs.answerDiv;
 
-      // Rozpoznaj fragmenty LaTeX (np. $...$ lub $$...$$) i zamień je na <math-field>
-      const processedContent = content.replace(
+      if (!contentDiv || !answerDiv) {
+        console.error("Nie udało się odnaleźć elementów referencji (refs).");
+        return;
+      }
+
+      // Przetwarzanie treści
+      const processedContent = data.content.replace(
         /\$\$([^$]+)\$\$|\$([^$]+)\$/g,
         (_, blockMath, inlineMath) => {
           const latex = blockMath || inlineMath;
-          // Zamień LaTeX na <math-field>
           return `<math-field>${latex}</math-field>`;
         }
       );
 
-      // Ustaw przetworzoną treść w div
-      div.innerHTML = processedContent;
+      // Przetwarzanie odpowiedzi
+      const processedAnswer = data.answer.replace(
+        /\$\$([^$]+)\$\$|\$([^$]+)\$/g,
+        (_, blockMath, inlineMath) => {
+          const latex = blockMath || inlineMath;
+          return `<math-field>${latex}</math-field>`;
+        }
+      );
 
-      // Przetwórz <math-field> na komponenty edytowalne lub wyświetlane
+      // Ustaw zawartość w divach
+      contentDiv.innerHTML = processedContent;
+      answerDiv.innerHTML = `<span class="answer-label" contenteditable="false">Odpowiedź:</span> ${processedAnswer}`;
+
+      // Przetwarzanie math-field
       this.processMathFields();
     },
     processMathFields() {
@@ -91,6 +135,13 @@ export default {
     convertMathfieldToDisplay(mathfield, latex) {
       const span = document.createElement('span');
       span.classList.add('katex-display');
+
+      if (this.isEditable) {
+        span.classList.add("editable");
+      } else {
+        span.classList.add("disabled");
+      }
+
       katex.render(latex, span, {
         throwOnError: false,
       });
@@ -119,13 +170,16 @@ export default {
     toggleEditMode() {
       this.isEditable = !this.isEditable;
     },
+    setActiveSection(section) {
+      this.activeSection = section;
+    },
     addMathField() {
       const mathfield = new MathfieldElement();
       mathfield.classList.add("inline-mathlive");
-      mathfield.setValue(""); // Możesz ustawić tutaj domyślną wartość
+      mathfield.setValue("");
 
-      // Dodajemy Mathfield do kursora lub na końcu
-      const div = this.$refs.editableDiv;
+      const div = this.activeSection === "answer" ?
+        this.$refs.answerDiv : this.$refs.editableDiv
       const selection = window.getSelection();
 
       if (
@@ -169,14 +223,29 @@ export default {
     }
   },
   watch: {
-    apiContent: {
+    taskContent: {
       immediate: true,
       handler(newContent) {
         if (newContent) {
+          this.$nextTick(() => {
           this.loadContentFromAPI(newContent);
+          })
         }
       },
     },
+    isEditable(newVal) {
+      const katexDisplays = this.$refs.editableDiv.querySelectorAll(".katex-display");
+
+      katexDisplays.forEach((span) => {
+        span.classList.remove("editable", "disabled");
+
+        if (newVal) {
+          span.classList.add("editable");
+        } else {
+          span.classList.add("disabled");
+        }
+      })
+    }
   },
 };
 </script>
@@ -189,15 +258,42 @@ export default {
   border: 1px solid #ccc;
   border-radius: 5px;
   position: relative;
+  background-color: #f0f0f0; /* Szary domyślnie (zablokowana edycja) */
+  padding: 4px;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.mathlive-text-editor.editable-active {
+  background-color: #ffffff; /* Białe tło przy włączonej edycji */
+  border-color: #ffcc00; /* Dodatkowe podkreślenie w trybie edycji */
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 4px 8px; /* Mniejsze marginesy */
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #ccc;
+}
+
+.task-number {
+  font-weight: bold;
+  font-size: 16px;
 }
 
 .button-container {
   display: flex;
   justify-content: flex-start;
   gap: 8px;
-  padding: 4px 8px; /* Mniejsze marginesy */
-  background-color: #f9f9f9;
-  border-bottom: 1px solid #ccc;
+}
+
+.answer-label {
+  font-weight: bold;
+  margin-right: 4px;
+  pointer-events: none; /* Wyłącza interakcje użytkownika */
+  user-select: none; /* Wyłącza możliwość zaznaczania tekstu */
 }
 
 .custom-button {
@@ -225,12 +321,27 @@ export default {
   display: inline-block;
   margin: 0 4px;
   padding: 2px 4px;
+  font-size: 16px;
+  vertical-align: middle;
+
+  /* Domyślny styl dla nieedytowalnego komponentu */
+  background-color: transparent;
+  border: none;
+  cursor: default;
+  color: inherit; /* Dopasowuje kolor tekstu */
+}
+
+.katex-display.editable {
   cursor: pointer;
   background-color: #f5f5f5;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 16px;
-  vertical-align: middle;
+}
+
+.katex-display.disabled {
+  background-color: #f0f0f0;
+  border: none; /* Brak obramowania */
+  cursor: default;
 }
 
 .inline-mathlive {

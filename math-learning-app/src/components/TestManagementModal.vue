@@ -49,12 +49,13 @@
     </template>
     <template #body>
       <div v-for="(task, index) in tasks" :key="index">
-        <TaskView
-          :content="task.content"
-          :answer="task.answer"
-          :index="index"
-          class="li">
-        </TaskView>
+        <MathliveTextEditor
+          :task-content="task"
+          :task-number="index"
+          :width="'100%'"
+          :height="'200px'"
+          :editable="false"
+        ></MathliveTextEditor>
       </div>
     </template>
 
@@ -79,11 +80,11 @@
 <script>
 import apiService from '@/services/apiService';
 import BaseModal from './shared/BaseModal.vue';
-import TaskView from "@/components/TaskView.vue";
+import MathliveTextEditor from "@/components/student/MathliveTextEditor.vue";
 
 export default {
   components: {
-    TaskView,
+    MathliveTextEditor,
     BaseModal
   },
   data() {

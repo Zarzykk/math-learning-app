@@ -2,10 +2,11 @@
   <div class="app-container">
     <h1>Edytor Treści z MathLive</h1>
     <MathliveTextEditor
-      :api-content="editorContent"
+      :task-content="editorContent"
       @update:modelValue="updateEditorContent"
-      :width="'200px'"
-      :height="'300px'"
+      :width="'500px'"
+      :height="'200px'"
+      :task-number="'1'"
       :editable="true"
     />
     <v-btn color="primary" @click="saveContentToAPI" class="save-button">
@@ -29,7 +30,7 @@ export default {
   },
   methods: {
     async fetchContentFromAPI() {
-      this.editorContent = 'Oblicz: $x^2 + y^2 = z^2$ ';
+      this.editorContent = 'Oblicz: $x^2 + y^2 = z^2$.';
     },
 
     updateEditorContent(newContent) {

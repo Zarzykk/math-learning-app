@@ -107,6 +107,21 @@ export default {
       throw error;
     }
   },
+  async getAssignmentData(id) {
+    const token = localStorage.getItem('userToken');
+    try {
+      const response = await axios.get(`${API_URL}/api/assignment/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'text/plain',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error during API call:', error);
+      throw error;
+    }
+  },
   async fetchStudents(teacherId) {
     const token = localStorage.getItem('userToken');
     console.log(teacherId)

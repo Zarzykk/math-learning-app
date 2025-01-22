@@ -4,6 +4,12 @@
       <div class="header-container">
         <div class="first-row">
           <span class="text-h5">Tworzenie nowego testu</span>
+          <v-date-input
+            label="Select a date"
+            prepend-icon=""
+            prepend-inner-icon="$calendar"
+            variant="solo"
+          ></v-date-input>
           <v-checkbox
             v-model="checked"
             label="Wygeneruj zadania"
@@ -29,8 +35,9 @@
               item-value="id"
               return-object></v-autocomplete>
           </div>
-          <div v-if="checked" class="right-side">
+          <div class="right-side">
             <v-text-field
+              v-if="checked"
               v-model="positiveNumber"
               label="Wprowadź liczbę"
               type="number"
@@ -38,6 +45,7 @@
               class="number-field"
             ></v-text-field>
             <v-btn
+              v-if="checked"
               class="search-btn"
               @click="generate"
               :disabled="!isSearchEnabled"
@@ -55,6 +63,7 @@
           :width="'100%'"
           :height="'200px'"
           :editable="false"
+          @update-task="updateTask"
         ></MathliveTextEditor>
       </div>
     </template>
@@ -81,10 +90,11 @@
 import apiService from '@/services/apiService';
 import BaseModal from './shared/BaseModal.vue';
 import MathliveTextEditor from "@/components/student/MathliveTextEditor.vue";
-
+import CustomDateTimePicker from "@/components/shared/CustomDateTimePicker.vue";
 export default {
   components: {
     MathliveTextEditor,
+    CustomDateTimePicker,
     BaseModal
   },
   data() {
@@ -95,6 +105,8 @@ export default {
       tasks: [],
       selectedClass: null,
       selectedMaterial: null,
+      date: null, // Przechowuje wybraną datę
+      time: null, // Przechowuje wybraną godzinę
     };
   },
   watch: {
@@ -136,7 +148,6 @@ export default {
       }
     },
     async generate() {
-      this.tasks = [];
       this.loading = true; // Włączenie animacji ładowania
 
       const message = `Utwórz dla mnie ${this.positiveNumber} zadań matematycznych z działu ${this.selectedMaterial.section}, niech te zadania nie będą do siebie podobne`;
@@ -165,6 +176,31 @@ export default {
     validatePositive(value) {
       return value > 0 || "Wartość musi być dodatnia!";
     },
+    addTask() {
+      if (!this.hasEmptyTask()) {
+        this.tasks.push({content: "", answer: ""})
+      }
+    },
+    hasEmptyTask() {
+      return this.tasks.some(task => (task.content === "" || task.answer === ""));
+    },
+    async saveTest() {
+      const tests = this.tasks.map(task => ({
+        ...task,
+        classId: this.selectedClass.id,
+        materialId: this.selectedMaterial.id
+      }))
+      console.log(tests);
+    },
+    updateTask({ taskNumber, updatedData }) {
+      console.log("task", taskNumber, "updatedData", updatedData);
+
+      if (updatedData) {
+        this.tasks[taskNumber] = updatedData;
+      } else {
+        console.error("Otrzymano undefined w updatedData");
+      }
+    }
   },
   computed: {
     isSearchEnabled() {
@@ -210,33 +246,44 @@ export default {
 
 .second-row {
   display: flex;
-  justify-content: space-between; /* Lewa i prawa strona */
-  align-items: flex-start; /* Wyrównanie do góry */
-  gap: 16px;
+  flex-wrap: nowrap; /* Utrzymuje elementy w jednym wierszu */
+  width: 100%; /* Cała szerokość komponentu */
 }
 
 .left-side {
+  flex: 3; /* 60% szerokości (3 z 5 części) */
+  padding: 0 8px; /* Odstęp wewnętrzny */
   display: flex;
-  flex: 1; /* Wypełnia przestrzeń */
-  gap: 16px; /* Odstęp między autocomplete */
-}
-
-.autocomplete-item {
-  flex: 1;
-  max-width: 40%
+  flex-direction: row; /* Elementy w jednym wierszu */
+  gap: 16px; /* Odstęp między elementami */
 }
 
 .right-side {
+  flex: 2; /* 40% szerokości */
+  padding: 0 8px; /* Odstęp wewnętrzny */
   display: flex;
-  gap: 16px; /* Odstęp między polem liczby i przyciskiem */
+  flex-direction: row; /* Układ elementów w jednym wierszu */
+  gap: 16px; /* Odstęp między polem tekstowym a przyciskiem */
+  align-items: center; /* Wyśrodkowanie w pionie */
+  justify-content: flex-start; /* Elementy zaczynają od lewej */
 }
 
 .number-field {
-  min-width: 150px; /* Minimalna szerokość dla pola liczby */
+  flex: 1; /* Pole liczby zajmuje resztę miejsca */
+  min-width: 150px; /* Minimalna szerokość pola liczby */
+  max-width: 300px; /* Maksymalna szerokość pola liczby */
 }
 
 .search-btn {
-  align-self: center; /* Przyciski na środku względem pola */
+  white-space: nowrap; /* Zapobiega zawijaniu tekstu */
+  flex-shrink: 0; /* Zapobiega ściskaniu przycisku */
+  align-self: center; /* Wyrównanie przycisku w pionie */
 }
+
+.autocomplete-item {
+  flex: 1; /* Elastyczna szerokość pola */
+  min-width: 150px; /* Minimalna szerokość */
+}
+
 </style>
 

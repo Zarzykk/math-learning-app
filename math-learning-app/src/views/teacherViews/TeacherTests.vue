@@ -30,8 +30,12 @@
       </v-row>
       <v-row>
         <v-container>
-          <v-expansion-panels>
-            <v-expansion-panel v-for="test in tests" :key="test.id" @click="loadPanelContent(test.id)">
+          <v-expansion-panels v-model="expandedPanel">
+            <v-expansion-panel
+              v-for="test in tests"
+              :key="test.id"
+              :value="test.id"
+              @click="loadPanelContent(test.id)">
               <v-expansion-panel-title>
                 <WorkHeader
                   :class-name="test.classIndex"
@@ -42,16 +46,13 @@
                 <div v-if="test.content">
                   <v-container>
                     <v-row justify="end">
-                      <v-btn icon class="mx-1" size="2.2em" @click="createNewTest('EDIT',test.id)">
-                        <v-icon>mdi-pencil</v-icon>
-                      </v-btn>
                       <v-btn icon class="mx-1" size="2.2em" @click="createNewTest('VIEW',test.id)">
                         <v-icon>mdi-magnify</v-icon>
                       </v-btn>
                     </v-row>
                     <WorkBody
-                      :completed-tests="test.content.numberOfCompletedTests"
-                      :expected-tests="test.content.numberOfExpectedTests"
+                      :completed-tests="test.content.finishedAssignments "
+                      :expected-tests="test.content.expectedAssignments"
                       :max-points="test.content.maxPoints"
                       :deactivation-time="test.content.deactivationTime"
                     />
@@ -108,8 +109,7 @@ export default {
       const userInfoString = localStorage.getItem('userInfo');
       const userInfo = JSON.parse(userInfoString);
       try {
-        const assignmentsResponse = await apiService.fetchAssignments(userInfo.id, 'EXAM');
-        this.tests = assignmentsResponse;
+        this.tests = await apiService.fetchAssignments(userInfo.id, 'EXAM');
         console.log(this.tests)
       } catch (error) {
         console.log(error);
@@ -127,13 +127,15 @@ export default {
         console.error('Error fetching classes:', error);
       }
     },
-    fetchDetailData(id) {
-      const test = this.tests.find(p => p.id === id);
-      if (test && !test.content) {
-        axios.get(`/api/tests/get/${id}/details`).then(response => {
-          test.content = response.data;
-          this.$forceUpdate;
-        })
+    async fetchDetailData(id) {
+      const test = this.tests.find(p => p.id === id); // Znajdź odpowiedni test
+      if (test && !test.content) { // Jeśli szczegóły testu nie zostały jeszcze załadowane
+        try {
+          const assignment = await apiService.getAssignmentData(id); // Pobierz dane szczegółowe
+          test.content = assignment; // Bezpośrednie przypisanie w Vue 3
+        } catch (error) {
+          console.error('Błąd podczas ładowania szczegółów testu:', error);
+        }
       }
     },
     loadPanelContent(id) {

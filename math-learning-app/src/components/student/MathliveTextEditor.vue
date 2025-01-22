@@ -2,7 +2,7 @@
   <div :class="['mathlive-text-editor', { 'editable-active': isEditable }]"
        :style="{ width: width, height: height }">
     <div class="header-container">
-      <div class="task-number" v-if="taskNumber">Zadanie {{ taskNumber + 1 }}</div>
+      <div class="task-number" v-if="taskNumber !== null && taskNumber !== undefined">Zadanie {{ taskNumber + 1 }}</div>
       <div v-else class="task-placeholder"></div>
       <div class="button-container">
         <v-btn
@@ -36,12 +36,14 @@
       ref="editableDiv"
       class="editable-div"
       :contenteditable="isEditable"
+      @blur="updateContent('content', $event)"
       @focus="setActiveSection('content')"
     ></div>
     <div
       ref="answerDiv"
       class="answer-div"
       :contenteditable="isEditable"
+      @blur="updateContent('answer', $event)"
       @focus="setActiveSection('answer')"
     >
       <span class="answer-label" contenteditable="false">Odpowiedź: </span>
@@ -117,10 +119,11 @@ export default {
       answerDiv.innerHTML = `<span class="answer-label" contenteditable="false">Odpowiedź:</span> ${processedAnswer}`;
 
       // Przetwarzanie math-field
-      this.processMathFields();
+      this.processMathFields(contentDiv);
+      this.processMathFields(answerDiv);
     },
-    processMathFields() {
-      const div = this.$refs.editableDiv;
+    processMathFields(field) {
+      const div = field;
 
       // Znajdź wszystkie <math-field>
       const mathFields = div.querySelectorAll('math-field');
@@ -172,6 +175,24 @@ export default {
     },
     setActiveSection(section) {
       this.activeSection = section;
+    },
+    updateContent(field, event) {
+      let updatedValue = event.target.innerText;
+
+      if (field === "answer" && updatedValue.startsWith("Odpowiedź:")) {
+        updatedValue = updatedValue.replace("Odpowiedź:", "").trim();
+      }
+
+      const updatedTaskContent = {
+        ...this.taskContent,
+        [field]: updatedValue,
+      };
+
+      this.$emit('update-task', {
+        taskNumber: this.taskNumber,
+        updatedData: updatedTaskContent,
+      });
+
     },
     addMathField() {
       const mathfield = new MathfieldElement();
@@ -329,6 +350,11 @@ export default {
   border: none;
   cursor: default;
   color: inherit; /* Dopasowuje kolor tekstu */
+}
+
+.answer-div {
+  max-width: 100%; /* Dopasowanie do szerokości rodzica */
+  word-wrap: break-word; /* Łamanie słów w razie potrzeby */
 }
 
 .katex-display.editable {

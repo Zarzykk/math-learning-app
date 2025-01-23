@@ -4,12 +4,74 @@
       <div class="header-container">
         <div class="first-row">
           <span class="text-h5">Tworzenie nowego testu</span>
-          <v-date-input
-            label="Select a date"
-            prepend-icon=""
-            prepend-inner-icon="$calendar"
-            variant="solo"
-          ></v-date-input>
+            <v-row>
+              <v-date-input
+                label="Data startu"
+                v-model="activationDate"
+                prepend-icon=""
+                prepend-inner-icon="$calendar"
+                variant="underlined"
+                @change="saveActivDate"
+                max-width="330"
+              ></v-date-input>
+              <v-text-field
+                v-model="activationTime"
+                :active="menu1"
+                :focus="menu1"
+                variant="underlined"
+                prepend-icon=""
+                prepend-inner-icon="mdi-clock-time-four-outline"
+                readonly
+                max-width="80"
+              >
+                <v-menu
+                  v-model="menu1"
+                  :close-on-content-click="false"
+                  activator="parent"
+                  transition="scale-transition"
+                >
+                  <v-time-picker
+                    v-if="menu1"
+                    format="24hr"
+                    v-model="activationTime"
+                    @change="saveActivDate"
+                    full-width
+                  ></v-time-picker>
+                </v-menu>
+              </v-text-field>
+              <v-date-input
+                label="Data zakończenia"
+                v-model="deactivationDate"
+                prepend-icon=""
+                prepend-inner-icon="$calendar"
+                variant="underlined"
+                max-width="330"
+              ></v-date-input>
+              <v-text-field
+                v-model="deactivationTime"
+                :active="menu2"
+                :focus="menu2"
+                variant="underlined"
+                prepend-icon=""
+                prepend-inner-icon="mdi-clock-time-four-outline"
+                readonly
+                max-width="80"
+              >
+                <v-menu
+                  v-model="menu2"
+                  :close-on-content-click="false"
+                  activator="parent"
+                  transition="scale-transition"
+                >
+                  <v-time-picker
+                    v-if="menu2"
+                    format="24hr"
+                    v-model="deactivationTime"
+                    full-width
+                  ></v-time-picker>
+                </v-menu>
+              </v-text-field>
+            </v-row>
           <v-checkbox
             v-model="checked"
             label="Wygeneruj zadania"
@@ -105,8 +167,15 @@ export default {
       tasks: [],
       selectedClass: null,
       selectedMaterial: null,
-      date: null, // Przechowuje wybraną datę
-      time: null, // Przechowuje wybraną godzinę
+      activationDate: null,
+      activationTime: null,
+      deactivationDate: null,
+      deactivationTime: null,
+      time: null,
+      menu1: false,
+      modal1: false,
+      menu2: false,
+      modal2: false,
     };
   },
   watch: {
@@ -147,6 +216,12 @@ export default {
 
       }
     },
+    saveActivDate(value) {
+      this.activationDate = value;
+    },
+    saveActivTime(value) {
+      this.time = value;
+    },
     async generate() {
       this.loading = true; // Włączenie animacji ładowania
 
@@ -184,13 +259,27 @@ export default {
     hasEmptyTask() {
       return this.tasks.some(task => (task.content === "" || task.answer === ""));
     },
+    formattedDateTime(date, time) {
+      if (date && time) {
+        const dateObj = new Date(date);
+        const [hours, minutes] = time.split(':').map(Number);
+
+        dateObj.setHours(hours, minutes, 0, 0);
+
+        return dateObj.toISOString();
+      }
+      return "";
+    },
     async saveTest() {
-      const tests = this.tasks.map(task => ({
-        ...task,
+      const tests = {
+        tasks: this.tasks,
         classId: this.selectedClass.id,
-        materialId: this.selectedMaterial.id
-      }))
-      console.log(tests);
+        materialId: this.selectedMaterial.id,
+        activationTime: this.formattedDateTime(this.activationDate, this.activationTime),
+        deactivationTime: this.formattedDateTime(this.deactivationDate, this.deactivationTime)
+      }
+      const response = await apiService.postAssignment(tests);
+      console.log(response);
     },
     updateTask({ taskNumber, updatedData }) {
       console.log("task", taskNumber, "updatedData", updatedData);

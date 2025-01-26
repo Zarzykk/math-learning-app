@@ -32,7 +32,14 @@
 <!--          <v-card-text>Twórz i oceniaj testy online.</v-card-text>-->
         </v-card>
       </v-col>
+      <v-col cols="12" sm="6" md="4">
+        <v-card class="ma-3" raised @click="goTo('/add-student')">
+          <v-card-title>Dodawanie uczniów</v-card-title>
+
+        </v-card>
+      </v-col>
     </v-row>
+
   </BaseDashboard>
 </template>
 

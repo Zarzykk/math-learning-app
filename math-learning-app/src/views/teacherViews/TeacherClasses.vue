@@ -24,10 +24,59 @@
         <v-expansion-panel v-for="student in students" :key="student.id">
           <div v-if="student.id">
             <v-expansion-panel-title>
-              {{ student.firstName }} {{ student.lastName }} {{student.classIndex}}
+              <v-col cols="4">
+                <v-row>
+                  <span class="text-h6">Imię</span>
+                </v-row>
+                <v-row>
+                  <span class="text-body-1">{{ student.firstName }}</span>
+                </v-row>
+              </v-col>
+              <v-col cols="4">
+                <v-row>
+                  <span class="text-h6">Nazwisko</span>
+                </v-row>
+                <v-row>
+                  <span class="text-body-1">{{ student.lastName }}</span>
+                </v-row>
+              </v-col>
+              <v-col cols="4">
+                <v-row>
+                  <span class="text-h6">Klasa</span>
+                </v-row>
+                <v-row>
+                  <span class="text-body-1">{{ student.classIndex }}</span>
+                </v-row>
+              </v-col>
             </v-expansion-panel-title>
             <v-expansion-panel-text>
-              {{ student.id }}
+              <v-container>
+                <v-row>
+                  <v-col cols="4">
+                    <v-row>
+                      <span class="text-h6">Rozwiązane sprawdziany</span>
+                    </v-row>
+                    <v-row>
+                      <span class="text-body-1">{{ student.completedTests }}</span>
+                    </v-row>
+                  </v-col>
+                  <v-col cols="4">
+                    <v-row>
+                      <span class="text-h6">Rozwiązane prace domowe</span>
+                    </v-row>
+                    <v-row>
+                      <span class="text-body-1">{{ student.completedHomeworks }}</span>
+                    </v-row>
+                  </v-col>
+                  <v-col cols="4">
+                    <v-row justify="end">
+                      <v-btn icon class="mx-1" size="2.2em" @click="openModal('VIEW',homework.id)">
+                        <v-icon>mdi-magnify</v-icon>
+                      </v-btn>
+                    </v-row>
+                  </v-col>
+                </v-row>
+              </v-container>
             </v-expansion-panel-text>
           </div>
 
@@ -52,6 +101,8 @@ export default {
       classes: [],
       selectedClass: null,
       visibleStudentId: null,
+      completedTests: null,
+      completedHomeworks: null
     };
   },
   mounted() {
@@ -77,7 +128,9 @@ export default {
           id: item.id,
           firstName: item.firstName,
           lastName: item.lastName,
-          classIndex: item.classIndex
+          classIndex: item.classIndex,
+          completedTests: item.completedTests,
+          completedHomeworks: item.completedHomeworks
         }));
       } catch (error) {
         console.error('Error fetching students:', error);
@@ -97,32 +150,6 @@ export default {
       }
     }
   }
-  // setup() {
-  //   const classes = ref([]);
-  //   const selectedClass = ref('');
-  //   const students = ref([]); // Dodajemy referencję dla studentów
-  //   const visibleStudentId = ref(null);
-  //
-  //   const fetchClasses = async () => {
-  //
-  //   };
-  //
-  //   const toggleDetails = (studentId) => {
-  //     visibleStudentId.value = visibleStudentId.value === studentId ? null : studentId;
-  //   }
-  //
-  //   onMounted(fetchClasses);
-  //
-  //   watch(selectedClass, (newClassId) => {
-  //     if (newClassId) {
-  //       fetchStudents(newClassId);
-  //     } else {
-  //       students.value = []; // Resetuj listę studentów, jeśli nie ma wybranej klasy
-  //     }
-  //   });
-  //
-  //   return {classes, selectedClass, students, fetchStudents, toggleDetails, visibleStudentId};
-  // }
 };
 </script>
 

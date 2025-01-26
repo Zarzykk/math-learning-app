@@ -153,5 +153,38 @@ export default {
       console.error('Error during API call:', error);
       throw error;
     }
+  },
+  async getAssigmentTasks(itemId) {
+    const token = localStorage.getItem('userToken');
+    try {
+      const response = await axios.get(`${API_URL}/api/assignment/${itemId}/tasks`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'text/plain',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error during API call:', error);
+      throw error;
+    }
+  },
+  async postStudent(studentData) {
+    const token = localStorage.getItem('userToken');
+    try {
+      console.log(studentData)
+      const response = await axios.post(`${API_URL}/api/students/create`,
+        studentData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      return response.data;
+    } catch (error) {
+      console.error('Error during API call:', error);
+      throw error;
+    }
   }
 }

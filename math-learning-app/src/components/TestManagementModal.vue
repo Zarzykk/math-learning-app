@@ -4,74 +4,74 @@
       <div class="header-container">
         <div class="first-row">
           <span class="text-h5">Tworzenie nowego testu</span>
-            <v-row>
-              <v-date-input
-                label="Data startu"
-                v-model="activationDate"
-                prepend-icon=""
-                prepend-inner-icon="$calendar"
-                variant="underlined"
-                @change="saveActivDate"
-                max-width="330"
-              ></v-date-input>
-              <v-text-field
-                v-model="activationTime"
-                :active="menu1"
-                :focus="menu1"
-                variant="underlined"
-                prepend-icon=""
-                prepend-inner-icon="mdi-clock-time-four-outline"
-                readonly
-                max-width="80"
+          <v-row>
+            <v-date-input
+              label="Data startu"
+              v-model="activationDate"
+              prepend-icon=""
+              prepend-inner-icon="$calendar"
+              variant="underlined"
+              @change="saveActivDate"
+              max-width="330"
+            ></v-date-input>
+            <v-text-field
+              v-model="activationTime"
+              :active="menu1"
+              :focus="menu1"
+              variant="underlined"
+              prepend-icon=""
+              prepend-inner-icon="mdi-clock-time-four-outline"
+              readonly
+              max-width="80"
+            >
+              <v-menu
+                v-model="menu1"
+                :close-on-content-click="false"
+                activator="parent"
+                transition="scale-transition"
               >
-                <v-menu
-                  v-model="menu1"
-                  :close-on-content-click="false"
-                  activator="parent"
-                  transition="scale-transition"
-                >
-                  <v-time-picker
-                    v-if="menu1"
-                    format="24hr"
-                    v-model="activationTime"
-                    @change="saveActivDate"
-                    full-width
-                  ></v-time-picker>
-                </v-menu>
-              </v-text-field>
-              <v-date-input
-                label="Data zakończenia"
-                v-model="deactivationDate"
-                prepend-icon=""
-                prepend-inner-icon="$calendar"
-                variant="underlined"
-                max-width="330"
-              ></v-date-input>
-              <v-text-field
-                v-model="deactivationTime"
-                :active="menu2"
-                :focus="menu2"
-                variant="underlined"
-                prepend-icon=""
-                prepend-inner-icon="mdi-clock-time-four-outline"
-                readonly
-                max-width="80"
+                <v-time-picker
+                  v-if="menu1"
+                  format="24hr"
+                  v-model="activationTime"
+                  @change="saveActivDate"
+                  full-width
+                ></v-time-picker>
+              </v-menu>
+            </v-text-field>
+            <v-date-input
+              label="Data zakończenia"
+              v-model="deactivationDate"
+              prepend-icon=""
+              prepend-inner-icon="$calendar"
+              variant="underlined"
+              max-width="330"
+            ></v-date-input>
+            <v-text-field
+              v-model="deactivationTime"
+              :active="menu2"
+              :focus="menu2"
+              variant="underlined"
+              prepend-icon=""
+              prepend-inner-icon="mdi-clock-time-four-outline"
+              readonly
+              max-width="80"
+            >
+              <v-menu
+                v-model="menu2"
+                :close-on-content-click="false"
+                activator="parent"
+                transition="scale-transition"
               >
-                <v-menu
-                  v-model="menu2"
-                  :close-on-content-click="false"
-                  activator="parent"
-                  transition="scale-transition"
-                >
-                  <v-time-picker
-                    v-if="menu2"
-                    format="24hr"
-                    v-model="deactivationTime"
-                    full-width
-                  ></v-time-picker>
-                </v-menu>
-              </v-text-field>
-            </v-row>
+                <v-time-picker
+                  v-if="menu2"
+                  format="24hr"
+                  v-model="deactivationTime"
+                  full-width
+                ></v-time-picker>
+              </v-menu>
+            </v-text-field>
+          </v-row>
           <v-checkbox
             v-model="checked"
             label="Wygeneruj zadania"
@@ -153,6 +153,7 @@ import apiService from '@/services/apiService';
 import BaseModal from './shared/BaseModal.vue';
 import MathliveTextEditor from "@/components/student/MathliveTextEditor.vue";
 import CustomDateTimePicker from "@/components/shared/CustomDateTimePicker.vue";
+
 export default {
   components: {
     MathliveTextEditor,
@@ -191,21 +192,58 @@ export default {
       if (!newVal) {
         this.positiveNumber = null;
       }
+    },
+    visible(newVal) {
+      console.log('visible changed to:', newVal);
+      if (newVal) {
+        this.$nextTick(() => {
+          console.log('Before fetchData - visible:', this.visible, 'itemId:', this.itemId);
+          this.fetchData();
+        });
+      }
+    },
+    itemId(newVal, oldVal) {
+      console.log('itemId changed from:', oldVal, 'to:', newVal);
+      if (this.visible) {
+        this.fetchData();
+      }
     }
   },
   props: {
-    visible: Boolean,
+    visible: {
+      type: Boolean,
+      required: true
+    },
     mode: String,
-    itemId: [String, Number],
+    itemId: {
+      type: [String, Number],
+      default: null
+    },
     classesList: {
       type: Array
     }
   },
+  mounted() {
+    console.log('Child mounted - itemId:', this.itemId, 'mode:', this.mode);
+  },
   methods: {
     async fetchData() {
       try {
+        console.log('fetchData called with itemId:', this.itemId, 'mode:', this.mode);
+        if (this.mode === 'VIEW') {
+          if (this.itemId !== null) {
+            this.tasks = await apiService.getAssigmentTasks(this.itemId);
+            console.log('Fetched tasks for itemId:', this.itemId, this.tasks);
+          } else {
+            console.error('Error: itemId is required for VIEW or EDIT mode');
+          }
+        } else if (this.mode === 'ADD') {
+          // Scenariusz: Tworzenie nowego testu (bez itemId)
+          this.tasks = []; // Inicjalizacja pustej listy zadań
+          console.log('Initialized empty tasks list for ADD mode.');
+        }
+
         const materialsResponse = await apiService.fetchMaterials();
-        const classesResponse = await apiService.fetchClasses(JSON.parse(localStorage.getItem('userInfo')).id);
         this.materialsList = materialsResponse.map((item) => ({
           id: item.id,
           classYear: item.classYear,
@@ -306,9 +344,6 @@ export default {
       );
       return filteredMaterials;
     }
-  },
-  mounted() {
-    this.fetchData();
   }
 };
 </script>

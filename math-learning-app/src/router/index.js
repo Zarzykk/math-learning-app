@@ -51,7 +51,12 @@ const routes = [
     path: '/create-test',
     component: () => import('@/components/CreateTest.vue'),
     meta: {requiresAuth: true, role: 'ROLE_TEACHER'}
-  }
+  },
+  {
+    path: '/add-student',
+    component: () => import('@/views/teacherViews/StudentsManage.vue'),
+    meta: {requiresAuth: true, role: 'ROLE_TEACHER'}
+  },
 ];
 
 

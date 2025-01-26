@@ -5,6 +5,7 @@
         <v-col>
           <v-btn @click="openModal('ADD')">Utwórz Nowy Test</v-btn>
           <TestManagementModal
+            v-if="showModal"
             :visible="showModal"
             :itemid="itemId"
             :mode="mode"
@@ -46,13 +47,13 @@
                 <div v-if="test.content">
                   <v-container>
                     <v-row justify="end">
-                      <v-btn icon class="mx-1" size="2.2em" @click="createNewTest('VIEW',test.id)">
+                      <v-btn icon class="mx-1" size="2.2em" @click="openModal('VIEW',test.id)">
                         <v-icon>mdi-magnify</v-icon>
                       </v-btn>
                     </v-row>
                     <WorkBody
-                      :completed-tests="test.content.finishedAssignments "
-                      :expected-tests="test.content.expectedAssignments"
+                      :completed-assignments="test.content.finishedAssignments "
+                      :expected-assignments="test.content.expectedAssignments"
                       :max-points="test.content.maxPoints"
                       :deactivation-time="test.content.deactivationTime"
                     />
@@ -75,7 +76,6 @@
 import BaseDashboard from "@/components/shared/BaseDashboard.vue";
 import TaskEditor from "@/components/TaskEditor.vue";
 import TaskManager from "@/components/TaskManager.vue";
-import axios from "axios";
 import WorkHeader from "@/components/work/WorkHeader.vue";
 import WorkBody from "@/components/work/WorkBody.vue";
 import TestManagementModal from "@/components/TestManagementModal.vue";
@@ -103,7 +103,9 @@ export default {
     openModal(mode, itemId = null) {
       this.mode = mode;
       this.itemId = itemId;
-      this.showModal = true;
+      this.$nextTick(() => {
+        this.showModal = true;
+      });
     },
     async fetchAssignments() {
       const userInfoString = localStorage.getItem('userInfo');
@@ -141,13 +143,6 @@ export default {
     loadPanelContent(id) {
       this.expandedPanel = id;
       this.fetchDetailData(id);
-    },
-    createNewTest(mode, id) {
-      if (id != null) {
-        this.$router.push({path: '/test-management', query: {mode: mode, testId: id}})
-      } else {
-        this.$router.push({path: '/test-management', query: {mode: mode}})
-      }
     },
   },
 };

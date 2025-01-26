@@ -2,10 +2,10 @@
     <v-row class="d-flex justify-space-between align-center">
       <v-col cols="4">
         <v-row>
-          <span class="text-subtitle-1">Liczba rozwiązanych testów</span>
+          <span class="text-subtitle-1">Liczba rozwiązanych prac</span>
         </v-row>
         <v-row>
-          <span class="text-body-2">{{ completedTests }} / {{ expectedTests }}</span>
+          <span class="text-body-2">{{ completedAssignments }} / {{ expectedAssignments }}</span>
         </v-row>
       </v-col>
       <v-col cols="4">
@@ -32,8 +32,8 @@
 <script>
 export default {
   props: {
-    completedTests: Number,
-    expectedTests: Number,
+    completedAssignments: Number,
+    expectedAssignments: Number,
     maxPoints: Number,
     deactivationTime: String
   }

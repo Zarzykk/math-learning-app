@@ -83,7 +83,6 @@ export default {
         }
       } catch (error) {
         console.error('Błąd dekodowania tokena:', error);
-        // Opcjonalnie: obsługa błędów dekodowania tokena
       }
     },
   },

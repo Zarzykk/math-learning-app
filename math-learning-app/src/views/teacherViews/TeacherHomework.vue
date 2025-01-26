@@ -3,7 +3,13 @@
     <v-col>
       <v-row>
         <v-col>
-          <v-btn @click="showCreateTestDialog('ADD',null)">Utwórz nowe zadanie</v-btn>
+          <v-btn @click="openModal('ADD')">Utwórz Nowy Test</v-btn>
+          <TestManagementModal
+            :visible="showModal"
+            :itemid="itemId"
+            :mode="mode"
+            :classes-list="allClasses"
+            @close="showModal = false"/>
         </v-col>
         <v-col>
           <v-autocomplete
@@ -15,7 +21,7 @@
             item-value="id"
             return-object>
             <template v-slot:append>
-              <v-btn>
+              <v-btn @click="fetchAssignments">
                 <v-icon>mdi-magnify</v-icon>
               </v-btn>
             </template>
@@ -24,8 +30,12 @@
       </v-row>
       <v-row>
         <v-container>
-          <v-expansion-panels>
-            <v-expansion-panel v-for="homework in homeworks" :key="homework.id" @click="loadPanelContent(homework.id)">
+          <v-expansion-panels v-model="expandedPanel">
+            <v-expansion-panel
+              v-for="homework in homeworks"
+              :key="homework.id"
+              :value="homework.id"
+              @click="loadPanelContent(homework.id)">
               <v-expansion-panel-title>
                 <WorkHeader
                   :class-name="homework.classIndex"
@@ -36,16 +46,13 @@
                 <div v-if="homework.content">
                   <v-container>
                     <v-row justify="end">
-                      <v-btn icon class="mx-1" size="2.2em" @click="showCreateTestDialog('EDIT',homework.id)">
-                        <v-icon>mdi-pencil</v-icon>
-                      </v-btn>
-                      <v-btn icon class="mx-1" size="2.2em" @click="showCreateTestDialog('VIEW',homework.id)">
+                      <v-btn icon class="mx-1" size="2.2em" @click="openModal('VIEW',homework.id)">
                         <v-icon>mdi-magnify</v-icon>
                       </v-btn>
                     </v-row>
                     <WorkBody
-                      :completed-tests="homework.content.numberOfCompletedTests"
-                      :expected-tests="homework.content.numberOfExpectedTests"
+                      :completed-assignments="homework.content.finishedAssignments "
+                      :expected-assignments="homework.content.expectedAssignments"
                       :max-points="homework.content.maxPoints"
                       :deactivation-time="homework.content.deactivationTime"
                     />
@@ -61,14 +68,6 @@
         </v-container>
       </v-row>
     </v-col>
-    <v-dialog v-model="dialog" max-width="1000px" max-height="800px">
-      <v-card height="800px">
-        <TaskManager
-          :mode="mode"
-          :test-id="testId"/>
-      </v-card>
-    </v-dialog>
-
   </BaseDashboard>
 </template>
 
@@ -79,15 +78,21 @@ import WorkHeader from "@/components/work/WorkHeader.vue";
 import BaseDashboard from "@/components/shared/BaseDashboard.vue";
 import axios from "axios";
 import apiService from "@/services/apiService";
+import TestManagementModal from "@/components/TestManagementModal.vue";
 
 export default {
   name: "TeacherHomework",
-  components: {BaseDashboard, WorkHeader, WorkBody, TaskManager},
+  components: {TestManagementModal, BaseDashboard, WorkHeader, WorkBody, TaskManager},
   data() {
     return {
       homeworks: [],
       allClasses: [],
       selectedClass: null,
+      expandedPanel: null,
+      dialog: false,
+      showModal: false,
+      mode: null,
+      itemId: null,
     }
   },
   mounted() {
@@ -95,12 +100,16 @@ export default {
     this.fetchAssignments();
   },
   methods: {
+    openModal(mode, itemId = null) {
+      this.mode = mode;
+      this.itemId = itemId;
+      this.showModal = true;
+    },
     async fetchAssignments() {
       const userInfoString = localStorage.getItem('userInfo');
       const userInfo = JSON.parse(userInfoString);
       try {
-        const assignmentsResponse = await apiService.fetchAssignments(userInfo.id, 'HOMEWORK');
-        this.homeworks = assignmentsResponse;
+        this.homeworks = await apiService.fetchAssignments(userInfo.id, 'HOMEWORK');
         console.log(this.homeworks)
       } catch (error) {
         console.log(error);
@@ -117,6 +126,21 @@ export default {
       } catch (error) {
         console.error('Error fetching classes:', error);
       }
+    },
+    async fetchDetailData(id) {
+      const homework = this.homeworks.find(p => p.id === id);
+      if (homework && !homework.content) {
+        try {
+          const assignment = await apiService.getAssignmentData(id); //
+          homework.content = assignment;
+        } catch (error) {
+          console.error('Błąd podczas ładowania szczegółów zadania domowego:', error);
+        }
+      }
+    },
+    loadPanelContent(id) {
+      this.expandedPanel = id;
+      this.fetchDetailData(id);
     }
   }
 }

@@ -57,6 +57,18 @@ const routes = [
     component: () => import('@/views/teacherViews/StudentsManage.vue'),
     meta: {requiresAuth: true, role: 'ROLE_TEACHER'}
   },
+  {
+    path: '/take-tests',
+    component: () => import('@/views/studentViews/TakeTests.vue'),
+    meta: {requiresAuth: true, role: 'ROLE_STUDENT'}
+  },
+  {
+    path: '/take-test/:id',
+    name: 'TakeTest',
+    component: () => import('@/views/studentViews/TakeTest.vue'),
+    meta: {requiresAuth: true, role: 'ROLE_STUDENT'},
+    props: true,
+  }
 ];
 
 

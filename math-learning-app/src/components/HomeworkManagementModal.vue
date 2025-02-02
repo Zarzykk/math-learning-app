@@ -3,7 +3,7 @@
     <template #header>
       <div class="header-container">
         <div class="first-row">
-          <span class="text-h5">Tworzenie nowego testu</span>
+          <span class="text-h5">Tworzenie nowego zadania domowego</span>
           <v-row>
             <v-date-input
               :disabled="mode === 'VIEW'"
@@ -132,7 +132,6 @@
           :width="'100%'"
           :height="'200px'"
           :editable="false"
-          :mode="localMode"
           @update-task="updateTask"
         ></MathliveTextEditor>
       </div>
@@ -185,7 +184,6 @@ export default {
       modal1: false,
       menu2: false,
       modal2: false,
-      localMode: this.mode,
     };
   },
   watch: {
@@ -201,9 +199,6 @@ export default {
       if (!newVal) {
         this.positiveNumber = null;
       }
-    },
-    mode(newVal) {
-      this.localMode = newVal;
     }
   },
   props: {

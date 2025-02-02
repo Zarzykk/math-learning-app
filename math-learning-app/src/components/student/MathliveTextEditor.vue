@@ -2,9 +2,10 @@
   <div :class="['mathlive-text-editor', { 'editable-active': isEditable }]"
        :style="{ width: width, height: height }">
     <div class="header-container">
-      <div class="task-number" v-if="taskNumber !== null && taskNumber !== undefined">Zadanie {{ taskNumber + 1 }}</div>
+      <div class="task-number" v-if="taskNumber !== null && taskNumber !== undefined">
+        Zadanie {{ taskNumber + 1 }}</div>
       <div v-else class="task-placeholder"></div>
-      <div class="button-container">
+      <div class="button-container" v-if="mode === 'ADD'">
         <v-btn
           icon
           @click="toggleEditMode"
@@ -78,6 +79,10 @@ export default {
     taskNumber: {
       type: Number,
       default: null, // Numer zadania jest opcjonalny
+    },
+    mode: {
+      type: String,
+      default: 'VIEW'
     }
   },
   data() {
@@ -88,6 +93,7 @@ export default {
   },
   methods: {
     loadContentFromAPI(data) {
+      console.log(this.mode)
       const contentDiv = this.$refs.editableDiv;
       const answerDiv = this.$refs.answerDiv;
 

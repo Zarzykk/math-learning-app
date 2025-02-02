@@ -10,6 +10,7 @@
             :itemid="itemId"
             :mode="mode"
             :classes-list="allClasses"
+            :selected-test="selectedTest"
             @close="showModal = false"/>
         </v-col>
         <v-col>
@@ -93,6 +94,7 @@ export default {
       showModal: false,
       mode: null,
       itemId: null,
+      selectedTest: null
     };
   },
   mounted() {
@@ -103,9 +105,20 @@ export default {
     openModal(mode, itemId = null) {
       this.mode = mode;
       this.itemId = itemId;
-      this.$nextTick(() => {
+
+      if (itemId) {
+        // Pobierz szczegóły testu przed otwarciem modala
+        this.fetchDetailData(itemId).then(() => {
+          console.log('Data fetched, opening modal...');
+          this.showModal = true; // Otwórz modal po załadowaniu danych
+        }).catch(error => {
+          console.error('Error fetching test details:', error);
+        });
+      } else {
+        // W trybie ADD otwórz modal bez danych
+        this.selectedTest = null;
         this.showModal = true;
-      });
+      }
     },
     async fetchAssignments() {
       const userInfoString = localStorage.getItem('userInfo');
@@ -130,11 +143,12 @@ export default {
       }
     },
     async fetchDetailData(id) {
-      const test = this.tests.find(p => p.id === id); // Znajdź odpowiedni test
-      if (test && !test.content) { // Jeśli szczegóły testu nie zostały jeszcze załadowane
+      const test = this.tests.find(p => p.id === id);
+      if (test && !test.content) {
         try {
-          const assignment = await apiService.getAssignmentData(id); // Pobierz dane szczegółowe
-          test.content = assignment; // Bezpośrednie przypisanie w Vue 3
+          const assignment = await apiService.getAssignmentData(id);
+          test.content = assignment;
+          this.selectedTest = assignment;
         } catch (error) {
           console.error('Błąd podczas ładowania szczegółów testu:', error);
         }

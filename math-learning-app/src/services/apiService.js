@@ -92,6 +92,23 @@ export default {
       throw error;
     }
   },
+  async fetchStudentAssignments() {
+    const token = localStorage.getItem('userToken');
+    const userId = JSON.parse(localStorage.getItem('userInfo')).id;
+    const type = 'EXAM';
+    try {
+      const response = await axios.get(`${API_URL}/api/assignment/student/${userId}/${type}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'text/plain',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error during API call:', error);
+      throw error;
+    }
+  },
   async fetchAssignments(teacherId, assignmentType) {
     const token = localStorage.getItem('userToken');
     try {

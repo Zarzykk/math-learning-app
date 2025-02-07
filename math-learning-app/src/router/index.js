@@ -70,6 +70,18 @@ const routes = [
     props: true,
   },
   {
+    path: '/take-homeworks',
+    component: () => import('@/views/studentViews/TakeHomework.vue'),
+    meta: {requiresAuth: true, role: 'ROLE_STUDENT'}
+  },
+  {
+    path: '/take-homework/:id',
+    name: 'TakeTest',
+    // component: () => import('@/views/studentViews/TakeTest.vue'),
+    meta: {requiresAuth: true, role: 'ROLE_STUDENT'},
+    props: true,
+  },
+  {
     path: '/educational-materials',
     component: () => import('@/components/student/LearningMaterials.vue'),
     meta: {requiresAuth: true, role: 'ROLE_STUDENT'}

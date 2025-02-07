@@ -92,10 +92,9 @@ export default {
       throw error;
     }
   },
-  async fetchStudentAssignments() {
+  async fetchStudentAssignments(type) {
     const token = localStorage.getItem('userToken');
     const userId = JSON.parse(localStorage.getItem('userInfo')).id;
-    const type = 'EXAM';
     try {
       const response = await axios.get(`${API_URL}/api/assignment/student/${userId}/${type}`, {
         headers: {

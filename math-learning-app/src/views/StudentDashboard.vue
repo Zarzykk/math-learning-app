@@ -42,6 +42,7 @@ export default {
         {
           title: 'Prace Domowe',
           description: 'Zobacz i wyślij swoje prace domowe.',
+          route: '/take-homeworks'
         },
         {
           title: 'Postępy w Nauce',

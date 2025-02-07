@@ -1,9 +1,8 @@
 <template>
   <BaseDashboard>
     <v-container fluid class="full-height">
-      <!-- Sekcja 1: Przyszłe wydarzenia -->
       <div class="section half-height">
-        <h2 class="section-title">Nadchodzące testy</h2>
+        <h2 class="section-title">Zadania domowe do rozwiązania</h2>
         <v-row>
           <v-col
             v-for="item in upcomingItems"
@@ -35,7 +34,7 @@
 
       <!-- Sekcja 2: Wydarzenia archiwalne -->
       <div class="section half-height">
-        <h2 class="section-title">Rozwiązane testy</h2>
+        <h2 class="section-title">Rozwiązane zadania</h2>
         <v-row>
           <v-col
             v-for="item in pastItems"
@@ -60,12 +59,11 @@
 
 <script>
 import BaseDashboard from "@/components/shared/BaseDashboard.vue";
-import WorkHeader from "@/components/work/WorkHeader.vue";
 import apiService from "@/services/apiService";
 
 export default {
-  name: "TakeTests",
-  components: {WorkHeader, BaseDashboard},
+  name: "TakeHomework",
+  components: {BaseDashboard},
   data() {
     return {
       items: [] // Przechowujemy wszystkie dane z API
@@ -87,7 +85,7 @@ export default {
   methods: {
     async fetchData() {
       try {
-        const response = await apiService.fetchStudentAssignments('EXAM');
+        const response = await apiService.fetchStudentAssignments('HOMEWORK');
         this.items = response.map(item => ({
           id: item.id,
           materialSection: item.materialSection,

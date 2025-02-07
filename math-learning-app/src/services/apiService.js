@@ -203,5 +203,23 @@ export default {
       console.error('Error during API call:', error);
       throw error;
     }
+  },
+  async submitAssignment(assignment) {
+    const token = localStorage.getItem('userToken');
+    try {
+      console.log(assignment)
+      const response = await axios.post(`${API_URL}/api/assignment/result/save`,
+        assignment,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      return response.data;
+    } catch (error) {
+      console.error('Error during API call:', error);
+      throw error;
+    }
   }
 }

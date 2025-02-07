@@ -1,25 +1,22 @@
 <template>
   <div :class="['mathlive-task-editor']" :style="{ width: width, height: height }">
-    <!-- Sekcja informacji o zadaniu -->
     <div class="task-info">
       <div class="task-content">
-        <!-- Wyświetlamy treść zadania po przetworzeniu wzorów matematycznych -->
         <span v-html="renderedContent"></span>
       </div>
       <div class="task-points">
         <strong>Punkty:</strong> {{ points }}
       </div>
     </div>
-    <!-- Sekcja edycji odpowiedzi -->
     <div class="answer-editor">
       <div class="answer-header">
+        <label class="answer-label">Odpowiedź</label>
         <v-btn
-          icon
           @click="addMathField"
-          :title="'Dodaj MathField'"
-          class="custom-button"
+          :title="'Dodaj pole matematyczne'"
+          class="add-math-btn"
         >
-          <v-icon>mdi-plus</v-icon>
+          Dodaj pole matematyczne
         </v-btn>
       </div>
       <div
@@ -29,8 +26,6 @@
         @blur="updateAnswer($event)"
         @focus="setActiveSection('answer')"
       >
-        <span class="answer-label" contenteditable="false">Odpowiedź: </span>
-        <!-- Wyświetlamy przetworzoną odpowiedź -->
         <span v-html="renderedAnswer"></span>
       </div>
     </div>
@@ -99,14 +94,15 @@ export default {
     convertMathfieldToDisplay(mathfield, latex) {
       const span = document.createElement('span');
       span.classList.add('katex-display');
-      // Ponieważ komponent zawsze jest edytowalny, przypisujemy klasę 'editable'
       span.classList.add('editable');
 
       katex.render(latex, span, {
         throwOnError: false
       });
 
-      // Po kliknięciu konwertujemy widok KaTeX z powrotem na MathField
+      const width = mathfield.offsetWidth;
+      span.style.width = (width + 5) + 'px';
+
       span.addEventListener('click', () => {
         this.convertDisplayToMathfield(span, latex);
       });
@@ -131,6 +127,7 @@ export default {
     },
     updateAnswer(event) {
       let updatedValue = event.target.innerText;
+      // Jeśli zawiera nadmiarowy tekst – usuń go
       if (updatedValue.startsWith("Odpowiedź:")) {
         updatedValue = updatedValue.replace("Odpowiedź:", "").trim();
       }
@@ -139,6 +136,7 @@ export default {
     addMathField() {
       const mathfield = new MathfieldElement();
       mathfield.classList.add("inline-mathlive");
+      mathfield.style.minWidth='50px'
       mathfield.setValue("");
 
       const div = this.$refs.answerDiv;
@@ -201,10 +199,13 @@ export default {
   transition: background-color 0.3s, border-color 0.3s;
 }
 .task-info {
+  flex: 0 0 auto;
   margin-bottom: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-right: 1px;
+  margin-left: 1px;
 }
 .task-content {
   flex: 9;
@@ -219,45 +220,66 @@ export default {
   margin: 0;
 }
 .answer-editor {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   border-top: 1px solid #ccc;
   padding-top: 8px;
 }
 .answer-header {
+  flex: 0 0 auto;
   display: flex;
-  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 4px;
+  margin-right: 1px;
+  margin-left: 1px;
 }
 .custom-button {
   width: 40px;
   height: 40px;
 }
+.answer-label {
+  font-weight: bold;
+  margin-bottom: 4px;
+  display: block;
+}
 .editable-answer {
-  min-height: 80px;
+  flex: 1 1 auto;
+  overflow-y: auto;
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  overflow: auto;
+}
+.add-math-btn {
+  border-radius: 4px;
+  padding: 6px 12px;
+  text-transform: none;
 }
 .katex-display {
   display: inline-block;
-  margin: 0 4px;
-  padding: 2px 4px;
-  font-size: 16px;
-  vertical-align: middle;
-  border: 1px solid #ccc;  /* Obramowanie 1px, kolor można dostosować */
-  width: auto;             /* Element zajmuje tylko tyle miejsca, ile potrzebuje */
+  vertical-align: baseline; /* wyrównanie do linii bazowej tekstu */
+  margin: 0 2px;           /* mniejsze odstępy po bokach */
+  padding: 0 2px;          /* delikatny padding, by tekst nie przylegał bezpośrednio do krawędzi */
+  font-size: 1em;          /* rozmiar zgodny z otaczającym tekstem */
+  line-height: 1;          /* opcjonalnie, by lepiej dopasować wysokość */
+  border: 1px solid transparent; /* domyślnie niewidoczne obramowanie */
   box-sizing: border-box;
 }
 .katex-display.editable {
   cursor: pointer;
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  background-color: #fdfdfd; /* bardzo jasne tło */
+  border: 1px solid #ccc;    /* delikatne obramowanie */
+  border-radius: 3px;        /* zaokrąglone rogi */
+  padding: 0 2px;           /* utrzymujemy podobny padding */
 }
+
 .inline-mathlive {
   display: inline-block;
-  margin: 0 4px;
-  vertical-align: middle;
-  font-size: 16px;
+  vertical-align: baseline;
+  margin: 0 2px;
+  font-size: 1em;
+  line-height: 1;
 }
 </style>

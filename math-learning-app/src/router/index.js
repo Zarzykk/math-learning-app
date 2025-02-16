@@ -76,7 +76,7 @@ const routes = [
   },
   {
     path: '/take-homework/:id',
-    name: 'TakeTest',
+    name: 'TakeHomework',
     // component: () => import('@/views/studentViews/TakeTest.vue'),
     meta: {requiresAuth: true, role: 'ROLE_STUDENT'},
     props: true,
@@ -86,6 +86,13 @@ const routes = [
     component: () => import('@/components/student/LearningMaterials.vue'),
     meta: {requiresAuth: true, role: 'ROLE_STUDENT'}
   },
+  {
+    name: 'AssignmentsGrading',
+    path: '/assignments-grading/:id',
+    component: () => import('@/components/AssignmentsGrading.vue'),
+    meta: {requiresAuth: true, role: 'ROLE_TEACHER'},
+    props: true
+  }
 ];
 
 

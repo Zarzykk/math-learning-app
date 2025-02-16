@@ -3,7 +3,7 @@
     <v-row class="base-dashboard d-flex justify-space-between">
       <v-col cols="2" class="d-flex justify-center buttons-left">
         <!-- Przycisk POWRÓT -->
-        <v-btn @click="goBack">Powrót</v-btn>
+        <v-btn @click="goBack" v-if="backVisible">Powrót</v-btn>
       </v-col>
       <v-col cols="8" class="main-content">
         <!-- Slot dla indywidualnej zawartości każdego dashboardu -->
@@ -21,6 +21,12 @@
 import {clearUserInfo} from "@/store";
 
 export default {
+  props: {
+    backVisible: {
+      type: Boolean,
+      default: true
+    }
+  },
   methods: {
     goBack() {
       this.$router.go(-1);

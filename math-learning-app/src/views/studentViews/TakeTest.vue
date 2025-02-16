@@ -1,24 +1,20 @@
 <template>
-  <BaseDashboard>
+  <BaseDashboard :back-visible="false">
     <v-container>
       <v-col>
         <div v-if="assignment">
           <!-- Główne informacje o teście -->
           <v-card class="mb-5">
             <v-card-title>
-              Test ID: {{ assignment.id }}
+              Test
             </v-card-title>
             <v-card-subtitle>
-              Sekcja materiału: {{ assignment.materialSection || "Brak informacji" }}
+              Sekcja {{ assignment.materialSection || "Brak informacji" }}
             </v-card-subtitle>
             <v-card-text>
               <p><strong>Czas aktywacji:</strong> {{ formatDate(assignment.activationTime) }}</p>
               <p><strong>Czas dezaktywacji:</strong> {{ formatDate(assignment.deactivationTime) }}</p>
               <p><strong>Punkty maksymalne:</strong> {{ assignment.maxPoints }}</p>
-              <p><strong>Wykonane zadania:</strong> {{ assignment.finishedAssignments }} z
-                {{ assignment.expectedAssignments }}</p>
-              <p><strong>Materiał ID:</strong> {{ assignment.materialId }}</p>
-              <p><strong>Typ:</strong> {{ assignment.type || "Nieokreślony" }}</p>
             </v-card-text>
           </v-card>
           <div v-for="(task, index) in assignment.tasks" :key="task.id">
@@ -89,6 +85,7 @@ export default {
           tasks: taskList
         }
         await apiService.submitAssignment(assignment);
+        this.$router.push('/student-dashboard');
       } catch (error) {
         console.error('Błąd podczas przesyłania testu', error);
       }

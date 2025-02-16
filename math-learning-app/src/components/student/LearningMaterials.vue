@@ -100,7 +100,7 @@
             </v-btn>
           </v-card>
 
-          <AnswerEditor v-if="generatedContent && activeTab === 0" :data="generatedContent" />
+          <AnswerEditor v-if="generatedContent && activeTab === 0" :data="generatedContent"/>
         </v-col>
       </v-row>
     </v-container>
@@ -110,6 +110,7 @@
 <script>
 import AnswerEditor from "@/components/editor/AnswerEditor.vue";
 import BaseDashboard from "@/components/shared/BaseDashboard.vue";
+import apiService from "@/services/apiService";
 
 export default {
   components: {
@@ -149,14 +150,14 @@ export default {
     async fetchApiData() {
       // Symulacja pobierania danych z API
       this.sections = [
-        { name: "Dział 1", description: "Opis Działu 1" },
-        { name: "Dział 2", description: "Opis Działu 2" },
-        { name: "Dział 3", description: "Opis Działu 3" },
+        {name: "Dział 1", description: "Opis Działu 1"},
+        {name: "Dział 2", description: "Opis Działu 2"},
+        {name: "Dział 3", description: "Opis Działu 3"},
       ];
       this.tasks = [
-        { name: "Zadanie 1", description: "Opis Zadania 1" },
-        { name: "Zadanie 2", description: "Opis Zadania 2" },
-        { name: "Zadanie 3", description: "Opis Zadania 3" },
+        {name: "Zadanie 1", description: "Opis Zadania 1"},
+        {name: "Zadanie 2", description: "Opis Zadania 2"},
+        {name: "Zadanie 3", description: "Opis Zadania 3"},
       ];
     },
     selectSection(index) {
@@ -186,7 +187,6 @@ export default {
         answer: responseFromApi.answer,
       };
 
-      // Zresetuj widoczność kroków i odpowiedzi
       this.visibleSteps = [];
       this.remainingSteps = responseFromApi.steps;
       this.showAnswer = false;

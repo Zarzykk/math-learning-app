@@ -28,11 +28,32 @@ export default {
       throw error;
     }
   },
-  async continueConversation(prompt, uuid) {
+  async continueConversation(prompt, uuid, taskType) {
     const token = localStorage.getItem('userToken');
-    uuid = null;
+    let url;
+    if (uuid !== null) {
+      url = `${API_URL}/api/chatgpt/generate?uuid=${uuid}&taskType=${taskType}`
+    } else {
+      url = `${API_URL}/api/chatgpt/generate?taskType=${taskType}`
+    }
     try {
-      const response = await axios.post(`${API_URL}/api/chatgpt/generate/${uuid}`, prompt, {
+      const response = await axios.post(url, prompt, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'text/plain',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error during API call:', error);
+      throw error;
+    }
+  },
+  async createLearningMaterial(materialType) {
+    const token = localStorage.getItem('userToken');
+    const userId = JSON.parse(localStorage.getItem('userInfo')).id
+    try {
+      const response = await axios.post(`${API_URL}/api/chatgpt/learning?materialType=${materialType}&studentId=${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'text/plain',
@@ -209,6 +230,22 @@ export default {
       console.log(assignment)
       const response = await axios.post(`${API_URL}/api/assignment/result/save`,
         assignment,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      return response.data;
+    } catch (error) {
+      console.error('Error during API call:', error);
+      throw error;
+    }
+  },
+  async getGradings(assignmentId) {
+    const token = localStorage.getItem('userToken');
+    try {
+      const response = await axios.get(`${API_URL}/api/assignment/result/grading?assignmentId=${assignmentId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,

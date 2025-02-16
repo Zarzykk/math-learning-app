@@ -68,17 +68,17 @@ export default {
   components: {WorkHeader, BaseDashboard},
   data() {
     return {
-      items: [] // Przechowujemy wszystkie dane z API
+      items: []
     };
   },
   computed: {
     upcomingItems() {
       const today = new Date();
-      return this.items.filter((item) => new Date(item.deactivationTime) > today);
+      return this.items.filter((item) => new Date(item.deactivationTime) > today && item.completed !== true );
     },
     pastItems() {
       const today = new Date();
-      return this.items.filter((item) => new Date(item.deactivationTime) <= today);
+      return this.items.filter((item) => new Date(item.deactivationTime) <= today || item.completed === true);
     }
   },
   created() {
@@ -92,9 +92,9 @@ export default {
           id: item.id,
           materialSection: item.materialSection,
           activationTime: item.activationTime,
-          deactivationTime: item.deactivationTime
+          deactivationTime: item.deactivationTime,
+          completed: item.completed
         }));
-        console.log(this.items)
       } catch (error) {
         console.error("Błąd podczas pobierania danych:", error);
       }

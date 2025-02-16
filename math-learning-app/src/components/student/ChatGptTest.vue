@@ -1,26 +1,15 @@
 <template>
-  <div class="app-container">
-    <h1>Edytor Treści z MathLive</h1>
-    <MathliveTextEditor
-      :task-content="editorContent"
-      @update:modelValue="updateEditorContent"
-      :width="'500px'"
-      :height="'200px'"
-      :task-number="'1'"
-      :editable="true"
-    />
-    <v-btn color="primary" @click="saveContentToAPI" class="save-button">
-      Zapisz Treść
-    </v-btn>
-  </div>
+  <FullComponentEditable></FullComponentEditable>
 </template>
 
 <script>
-import MathliveTextEditor from './MathliveTextEditor.vue'; // Import naszego komponentu edytora
+import MathliveTextEditor from './MathliveTextEditor.vue';
+import FullComponentEditable from "@/components/editor/FullComponentEditable.vue"; // Import naszego komponentu edytora
 
 export default {
   name: 'App',
   components: {
+    FullComponentEditable,
     MathliveTextEditor,
   },
   data() {

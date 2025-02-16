@@ -1,5 +1,5 @@
 <template>
-  <BaseDashboard>
+  <BaseDashboard :back-visible="false">
     <v-row>
       <v-col
         cols="12"

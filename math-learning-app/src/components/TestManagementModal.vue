@@ -1,80 +1,89 @@
-<template>
+<template xmlns="http://www.w3.org/1999/html">
   <BaseModal :visible="visible" @close="handleClose" size="large">
     <template #header>
       <div class="header-container">
         <div class="first-row">
-          <span class="text-h5">Tworzenie nowego testu</span>
           <v-row>
-            <v-date-input
-              :disabled="mode === 'VIEW'"
-              label="Data startu"
-              v-model="activationDate"
-              prepend-icon=""
-              prepend-inner-icon="$calendar"
-              variant="underlined"
-              @change="saveActivDate"
-              max-width="330"
-            ></v-date-input>
-            <v-text-field
-              :disabled="mode === 'VIEW'"
-              v-model="activationTime"
-              :active="menu1"
-              :focus="menu1"
-              variant="underlined"
-              prepend-icon=""
-              prepend-inner-icon="mdi-clock-time-four-outline"
-              readonly
-              max-width="80"
+            <div><span class="text-h5">Tworzenie nowego testu</span></div>
+            <v-menu
+              v-model="menu1"
+              :close-on-content-click="false"
+              transition="scale-transition"
+              offset-y
             >
-              <v-menu
-                v-model="menu1"
-                :close-on-content-click="false"
-                activator="parent"
-                transition="scale-transition"
-              >
-                <v-time-picker
-                  v-if="menu1"
-                  format="24hr"
-                  v-model="activationTime"
+              <template #activator="{ props }">
+                <v-date-input
+                  v-bind="props"
+                  :disabled="mode === 'VIEW'"
+                  label="Data startu"
+                  v-model="activationDate"
+                  prepend-icon=""
+                  :min="minDate"
+                  prepend-inner-icon="$calendar"
+                  variant="underlined"
                   @change="saveActivDate"
-                  full-width
-                ></v-time-picker>
-              </v-menu>
-            </v-text-field>
-            <v-date-input
-              :disabled="mode === 'VIEW'"
-              label="Data zakończenia"
-              v-model="deactivationDate"
-              prepend-icon=""
-              prepend-inner-icon="$calendar"
-              variant="underlined"
-              max-width="330"
-            ></v-date-input>
-            <v-text-field
-              :disabled="mode === 'VIEW'"
-              v-model="deactivationTime"
-              :active="menu2"
-              :focus="menu2"
-              variant="underlined"
-              prepend-icon=""
-              prepend-inner-icon="mdi-clock-time-four-outline"
-              readonly
-              max-width="80"
-            >
+                  style="max-width: 150px;"
+                />
+              </template>
+              <v-date-picker
+                v-model="activationDate"
+                :min="minDate"
+                style="min-width: 300px;"
+              @change="menu1 = false"
+              />
+            </v-menu>
+            <div class="time-picker-container">
+              <v-text-field
+                v-model="formattedActivationTime"
+                variant="underlined"
+                prepend-inner-icon="mdi-clock-time-four-outline"
+                label="Czas rozpoczęcia"
+                placeholder="HH:MM"
+                min-width="100px"
+                persistent-placeholder
+                @blur="validateTimeInput('activation')"
+                @input="onTimeInputChange('activation')"
+              />
               <v-menu
-                v-model="menu2"
+                v-model="menuActivation"
                 :close-on-content-click="false"
-                activator="parent"
                 transition="scale-transition"
               >
                 <v-time-picker
-                  v-if="menu2"
+                  v-if="menuActivation"
                   format="24hr"
-                  v-model="deactivationTime"
+                  v-model="pickerActivationTime"
+                  @change="onTimePickerChange('activation')"
                   full-width
-                ></v-time-picker>
+                />
               </v-menu>
-            </v-text-field>
+            </div>
+            <div class="time-picker-container">
+              <v-text-field
+                v-model="formattedDeactivationTime"
+                variant="underlined"
+                prepend-inner-icon="mdi-clock-time-four-outline"
+                label="Czas zakończenia"
+                placeholder="HH:MM"
+                min-width="100px"
+                persistent-placeholder
+                @blur="validateTimeInput('deactivation')"
+                @input="onTimeInputChange('deactivation')"
+              />
+              <v-menu
+                v-model="menuDeactivation"
+                :close-on-content-click="false"
+                transition="scale-transition"
+              >
+                <v-time-picker
+                  v-if="menuDeactivation"
+                  format="24hr"
+                  v-model="pickerDeactivationTime"
+                  @change="onTimePickerChange('deactivation')"
+                  full-width
+                />
+              </v-menu>
+            </div>
           </v-row>
           <v-checkbox
             v-model="checked"
@@ -178,14 +187,20 @@ export default {
       selectedMaterial: null,
       activationDate: null,
       activationTime: null,
-      deactivationDate: null,
+      menuActivation: false,
+      pickerActivationTime: null,
+      formattedActivationTime: '',
       deactivationTime: null,
+      menuDeactivation: false,
+      pickerDeactivationTime: null,
+      formattedDeactivationTime: '',
       time: null,
       menu1: false,
       modal1: false,
       menu2: false,
       modal2: false,
       localMode: this.mode,
+      minDate: null,
     };
   },
   watch: {
@@ -229,6 +244,7 @@ export default {
     if (this.selectedTest !== null) {
       this.initializeData(this.selectedTest)
     }
+    this.minDate = ref(new Date().toISOString().split('T')[0]);
   },
   methods: {
     async fetchData() {
@@ -262,7 +278,7 @@ export default {
       const message = `Utwórz dla mnie ${this.positiveNumber} zadań matematycznych z działu ${this.selectedMaterial.section}, niech te zadania nie będą do siebie podobne`;
 
       try {
-        const response = await apiService.continueConversation(message, null);
+        const response = await apiService.continueConversation(message, null,"exam");
         // Zakładamy, że data.tasks zawiera tablicę zadań w odpowiedzi API
         if (response.tasks && Array.isArray(response.tasks)) {
           // Dodanie zadań do listy zdekodowanych zadań
@@ -298,7 +314,7 @@ export default {
         const dateObj = new Date(date);
         const [hours, minutes] = time.split(':').map(Number);
 
-        dateObj.setHours(hours, minutes, 0, 0);
+        dateObj.setHours(hours+1, minutes, 0, 0);
 
         return dateObj.toISOString();
       }
@@ -309,8 +325,8 @@ export default {
         tasks: this.tasks,
         classId: this.selectedClass.id,
         materialId: this.selectedMaterial.id,
-        activationTime: this.formattedDateTime(this.activationDate, this.activationTime),
-        deactivationTime: this.formattedDateTime(this.deactivationDate, this.deactivationTime)
+        activationTime: this.formattedDateTime(this.activationDate, this.formattedActivationTime),
+        deactivationTime: this.formattedDateTime(this.activationDate, this.formattedDeactivationTime)
       }
       const response = await apiService.postAssignment(tests);
       console.log(response);
@@ -323,7 +339,67 @@ export default {
       } else {
         console.error("Otrzymano undefined w updatedData");
       }
-    }
+    },
+    validateTimeInput(type) {
+      const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
+      let timeModel, internalModel, pickerModel;
+
+      if (type === 'activation') {
+        timeModel = this.formattedActivationTime;
+        internalModel = 'activationTime';
+        pickerModel = 'pickerActivationTime';
+      } else {
+        timeModel = this.formattedDeactivationTime;
+        internalModel = 'deactivationTime';
+        pickerModel = 'pickerDeactivationTime';
+      }
+
+      if (timePattern.test(timeModel)) {
+        this[internalModel] = timeModel; // Synchronizacja z modelem
+        this[pickerModel] = timeModel; // Synchronizacja z pickerem
+      } else {
+        alert('Nieprawidłowy format czasu. Wprowadź w formacie HH:MM.');
+        this[timeModel] = '';
+      }
+    },
+
+    // Obsługa zmiany czasu w pickerze
+    onTimePickerChange(type) {
+      let timeModel, internalModel, pickerModel;
+
+      if (type === 'activation') {
+        timeModel = 'formattedActivationTime';
+        internalModel = 'activationTime';
+        pickerModel = 'pickerActivationTime';
+        this.menuActivation = false;
+      } else {
+        timeModel = 'formattedDeactivationTime';
+        internalModel = 'deactivationTime';
+        pickerModel = 'pickerDeactivationTime';
+        this.menuDeactivation = false;
+      }
+
+      this[timeModel] = this[pickerModel];
+      this[internalModel] = this[pickerModel];
+    },
+
+    // Obsługa zmiany czasu w polu tekstowym
+    onTimeInputChange(type) {
+      const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
+      let timeModel, pickerModel;
+
+      if (type === 'activation') {
+        timeModel = 'formattedActivationTime';
+        pickerModel = 'pickerActivationTime';
+      } else {
+        timeModel = 'formattedDeactivationTime';
+        pickerModel = 'pickerDeactivationTime';
+      }
+
+      if (timePattern.test(this[timeModel])) {
+        this[pickerModel] = this[timeModel]; // Synchronizacja pickera
+      }
+    },
   },
   computed: {
     isSearchEnabled() {

@@ -257,7 +257,7 @@ export default {
       const message = `Utwórz dla mnie ${this.positiveNumber} zadań matematycznych z działu ${this.selectedMaterial.section}, niech te zadania nie będą do siebie podobne`;
 
       try {
-        const response = await apiService.continueConversation(message, null);
+        const response = await apiService.continueConversation(message, null,"homework");
         // Zakładamy, że data.tasks zawiera tablicę zadań w odpowiedzi API
         if (response.tasks && Array.isArray(response.tasks)) {
           // Dodanie zadań do listy zdekodowanych zadań

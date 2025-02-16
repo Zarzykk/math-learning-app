@@ -31,42 +31,77 @@
         </v-col>
       </v-row>
       <v-row>
-        <v-container>
-          <v-expansion-panels v-model="expandedPanel">
-            <v-expansion-panel
-              v-for="test in tests"
-              :key="test.id"
-              :value="test.id"
-              @click="loadPanelContent(test.id)">
-              <v-expansion-panel-title>
-                <WorkHeader
-                  :class-name="test.classIndex"
-                  :materialName="test.materialSection"
-                  :start-date="test.activationTime"/>
-              </v-expansion-panel-title>
-              <v-expansion-panel-text>
-                <div v-if="test.content">
-                  <v-container>
-                    <v-row justify="end">
-                      <v-btn icon class="mx-1" size="2.2em" @click="openModal('VIEW',test.id)">
-                        <v-icon>mdi-magnify</v-icon>
-                      </v-btn>
-                    </v-row>
-                    <WorkBody
-                      :completed-assignments="test.content.finishedAssignments "
-                      :expected-assignments="test.content.expectedAssignments"
-                      :max-points="test.content.maxPoints"
-                      :deactivation-time="test.content.deactivationTime"
-                    />
-                  </v-container>
+        <v-container fluid class="full-height">
+          <div class="section half-height">
+            <h2 class="section-title">Nadchodzące testy</h2>
+            <v-expansion-panels v-model="expandedPanel">
+              <v-expansion-panel
+                v-for="item in upcomingItems"
+                :key="item.id"
+                :value="item.id"
+                @click="loadPanelContent(item.id)">
+                <v-expansion-panel-title>
+                  <WorkHeader
+                    :class-name="item.classIndex"
+                    :materialName="item.materialSection"
+                    :start-date="item.activationTime"/>
+                </v-expansion-panel-title>
+                <v-expansion-panel-text>
+                  <div v-if="item.content">
+                    <v-container>
+                      <v-row justify="end">
+                        <v-btn icon class="mx-1" size="2.2em" @click="openModal('VIEW',item.id)">
+                          <v-icon>mdi-magnify</v-icon>
+                        </v-btn>
+                      </v-row>
+                      <WorkBody
+                        :completed-assignments="item.content.finishedAssignments "
+                        :expected-assignments="item.content.expectedAssignments"
+                        :max-points="item.content.maxPoints"
+                        :deactivation-time="item.content.deactivationTime"
+                      />
+                    </v-container>
+                  </div>
+                </v-expansion-panel-text>
+              </v-expansion-panel>
+            </v-expansion-panels>
+          </div>
+          <div class="section half-height">
+            <h2 class="section-title">Testy archiwalne</h2>
+            <v-expansion-panels v-model="expandedPanel">
+              <v-expansion-panel
+                v-for="test in pastItems"
+                :key="test.id"
+                :value="test.id">
+                <v-expansion-panel-title>
+                  <WorkHeader
+                    :class-name="test.classIndex"
+                    :materialName="test.materialSection"
+                    :start-date="test.activationTime"/>
+                </v-expansion-panel-title>
+                <v-expansion-panel-text>
+                    <v-container>
+                      <v-row justify="end">
+                        <v-btn
+                          class="mx-1"
+                          icon
+                          size="2.2em"
+                          :to="{name: 'AssignmentsGrading', params: { id: test.id }}">
+                          <v-icon>mdi-magnify</v-icon>
+                        </v-btn>
+                      </v-row>
+                      <WorkBody
+                        :completed-assignments="test.finishedAssignments "
+                        :expected-assignments="test.expectedAssignments"
+                        :max-points="test.maxPoints"
+                        :deactivation-time="test.deactivationTime"
+                      />
+                    </v-container>
 
-                </div>
-                <div v-else>
-                  Ładowanie szczegółów...
-                </div>
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-          </v-expansion-panels>
+                </v-expansion-panel-text>
+              </v-expansion-panel>
+            </v-expansion-panels>
+          </div>
         </v-container>
       </v-row>
     </v-col>
@@ -100,6 +135,16 @@ export default {
   mounted() {
     this.fetchAssignments();
     this.fetchClasses()
+  },
+  computed: {
+    upcomingItems() {
+      const today = new Date();
+      return this.tests.filter((item) => new Date(item.activationTime) > today);
+    },
+    pastItems() {
+      const today = new Date();
+      return this.tests.filter((item) => new Date(item.activationTime) <= today);
+    }
   },
   methods: {
     openModal(mode, itemId = null) {
@@ -155,9 +200,32 @@ export default {
       }
     },
     loadPanelContent(id) {
+      if (this.expandedPanel === null) {
       this.expandedPanel = id;
-      this.fetchDetailData(id);
+      } else {
+        this.expandedPanel = null;
+      }
     },
   },
 };
 </script>
+
+<style scoped>
+.full-height {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+}
+
+/* Sekcje dzielone na pół */
+.half-height {
+  flex: 1; /* Każda sekcja zajmuje połowę wysokości */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 16px;
+  border-top: 1px solid #ccc;
+}
+</style>
